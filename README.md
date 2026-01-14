@@ -1,5 +1,6 @@
 # Inventory Management System
-
+# Inventory Management System
+# Inventory Management System
 A comprehensive, multi-organization inventory management system built with React, NestJS, PostgreSQL, and Prisma. This system allows multiple organizations to manage their inventory independently with full data isolation.
 
 ## 📋 Table of Contents

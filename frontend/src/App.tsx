@@ -19,14 +19,9 @@ const AppRoutes = () => {
 
   return (
     <Routes>
-      <Route
-        path="/login"
-        element={<Login />}
-      />
-      <Route
-        path="/auth/callback"
-        element={<AuthCallback />}
-      />
+      <Route path="/login" element={<Login />} />
+      <Route path="/auth/callback" element={<AuthCallback />} />
+
       <Route
         path="/"
         element={
@@ -37,6 +32,7 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
+
       <Route
         path="/products"
         element={
@@ -47,6 +43,7 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
+
       <Route
         path="/categories"
         element={
@@ -57,6 +54,7 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
+
       <Route
         path="/low-stock"
         element={
@@ -67,46 +65,55 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
+
+      {/* ADMIN ONLY */}
       <Route
         path="/history"
         element={
-          <ProtectedRoute adminOnly={true}>
+          <ProtectedRoute adminOnly>
             <Layout>
               <History />
             </Layout>
           </ProtectedRoute>
         }
       />
+
+      {/* ADMIN ONLY */}
       <Route
         path="/staff"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute adminOnly>
             <Layout>
               <StaffManagement />
             </Layout>
           </ProtectedRoute>
         }
       />
+
+      {/* ADMIN ONLY */}
       <Route
         path="/audit-logs"
         element={
-          <ProtectedRoute adminOnly={true}>
+          <ProtectedRoute adminOnly>
             <Layout>
               <AuditLogs />
             </Layout>
           </ProtectedRoute>
         }
       />
+
+      {/* ADMIN ONLY */}
       <Route
         path="/settings"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute adminOnly>
             <Layout>
               <Settings />
             </Layout>
           </ProtectedRoute>
         }
       />
+
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
