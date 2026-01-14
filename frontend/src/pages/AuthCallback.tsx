@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 export const AuthCallback = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { login } = useAuth();
+  useAuth();
 
   useEffect(() => {
     const token = searchParams.get('token');

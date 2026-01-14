@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { productsApi } from '../api/products';
 import type { Product, CreateProductDto } from '../api/products';
 import { categoriesApi } from '../api/categories';
@@ -21,10 +21,8 @@ interface ProductWithLastMovement extends Product {
 
 export const Products = () => {
   const { isAdmin } = useAuth();
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState<ProductWithLastMovement[]>([]);
-  const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);

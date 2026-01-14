@@ -136,7 +136,7 @@ const SwitchOrganizationContent = () => {
     { id: '3', name: 'Organization 3', active: false },
   ]);
 
-  const handleSwitch = (orgId: string) => {
+  const handleSwitch = (_orgId: string) => {
     toast.success('Organization switched successfully!');
   };
 

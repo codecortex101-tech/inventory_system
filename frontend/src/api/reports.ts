@@ -1,6 +1,5 @@
 import { apiClient } from './client';
 import type { Product } from './products';
-import type { StockMovement } from './stock';
 
 export interface StockSummary {
   totalProducts: number;

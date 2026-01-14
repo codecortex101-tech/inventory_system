@@ -15,7 +15,7 @@ import { History } from './pages/History';
 import { Settings } from './pages/Settings';
 
 const AppRoutes = () => {
-  const { isAuthenticated } = useAuth();
+  useAuth();
 
   return (
     <Routes>
