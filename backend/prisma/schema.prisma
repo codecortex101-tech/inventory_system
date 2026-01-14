@@ -1,0 +1,200 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  STAFF
+}
+
+enum StockMovementType {
+  IN
+  OUT
+  ADJUSTMENT
+}
+
+enum ProductStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  BACKORDERED
+  CANCELLED
+}
+
+model Organization {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  users         User[]
+  categories    Category[]
+  products      Product[]
+  stockMovements StockMovement[]
+  auditLogs     AuditLog[]
+  orders        Order[]
+  purchaseOrders PurchaseOrder[]
+
+  @@map("organizations")
+}
+
+model User {
+  id             String       @id @default(uuid())
+  name           String
+  email          String
+  password       String
+  role           UserRole     @default(STAFF)
+  organizationId String       @map("organization_id")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  stockMovements StockMovement[]
+  auditLogs      AuditLog[]
+
+  @@unique([email, organizationId])
+  @@map("users")
+}
+
+model Category {
+  id             String        @id @default(uuid())
+  name           String
+  description    String?
+  organizationId String        @map("organization_id")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  products       Product[]
+
+  @@unique([name, organizationId])
+  @@map("categories")
+}
+
+model Product {
+  id             String        @id @default(uuid())
+  name           String
+  sku            String
+  categoryId     String        @map("category_id")
+  organizationId String        @map("organization_id")
+  description    String?
+  imageUrl       String?       @map("image_url")
+  costPrice      Float         @map("cost_price")
+  sellingPrice   Float         @map("selling_price")
+  currentStock   Int           @default(0) @map("current_stock")
+  minimumStock   Int           @default(0) @map("minimum_stock")
+  unit           String        @default("pcs")
+  status         ProductStatus @default(ACTIVE)
+  expirationDate DateTime?     @map("expiration_date")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  category       Category      @relation(fields: [categoryId], references: [id])
+  stockMovements StockMovement[]
+
+  @@unique([sku, organizationId])
+  @@map("products")
+}
+
+model StockMovement {
+  id             String            @id @default(uuid())
+  productId      String            @map("product_id")
+  organizationId String            @map("organization_id")
+  quantity       Int
+  type           StockMovementType
+  reason         String
+  userId         String            @map("user_id")
+  createdAt      DateTime          @default(now()) @map("created_at")
+
+  organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  product        Product           @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user           User              @relation(fields: [userId], references: [id])
+
+  @@map("stock_movements")
+}
+
+enum AuditLogAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  STOCK_MOVEMENT
+  STATUS_CHANGE
+}
+
+model AuditLog {
+  id             String          @id @default(uuid())
+  organizationId String          @map("organization_id")
+  userId         String          @map("user_id")
+  action         AuditLogAction
+  entityType     String          @map("entity_type")
+  entityId       String?         @map("entity_id")
+  description    String
+  oldValue       String?         @map("old_value")
+  newValue       String?         @map("new_value")
+  ipAddress      String?         @map("ip_address")
+  userAgent      String?         @map("user_agent")
+  createdAt      DateTime        @default(now()) @map("created_at")
+
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User            @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
+  @@index([organizationId, createdAt])
+  @@index([userId, createdAt])
+}
+
+model Order {
+  id             String      @id @default(uuid())
+  organizationId String      @map("organization_id")
+  customerName   String      @map("customer_name")
+  status         OrderStatus @default(PENDING)
+  orderDate      DateTime    @default(now()) @map("order_date")
+  shippedDate    DateTime?   @map("shipped_date")
+  dueDate        DateTime?   @map("due_date")
+  totalAmount    Float       @default(0) @map("total_amount")
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("orders")
+  @@index([organizationId, status])
+  @@index([organizationId, orderDate])
+}
+
+model PurchaseOrder {
+  id             String   @id @default(uuid())
+  organizationId String   @map("organization_id")
+  vendorName     String   @map("vendor_name")
+  poNumber       String   @unique @map("po_number")
+  status         String   @default("OPEN")
+  orderDate      DateTime @default(now()) @map("order_date")
+  expectedDate   DateTime? @map("expected_date")
+  receivedDate   DateTime? @map("received_date")
+  totalAmount    Float    @default(0) @map("total_amount")
+  isLate         Boolean  @default(false) @map("is_late")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("purchase_orders")
+  @@index([organizationId, status])
+}
