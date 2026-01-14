@@ -1,19 +1,15 @@
-import { IsString, IsNumber, IsEnum, Min, IsNotEmpty } from 'class-validator';
-import { StockMovementType } from '@prisma/client';
+import { IsUUID, IsInt, IsString, IsIn } from 'class-validator';
 
 export class CreateStockMovementDto {
-  @IsString()
-  @IsNotEmpty()
+  @IsUUID()
   productId: string;
 
-  @IsNumber()
-  @Min(0.01)
+  @IsInt()
   quantity: number;
 
-  @IsEnum(StockMovementType)
-  type: StockMovementType;
+  @IsIn(['IN', 'OUT', 'ADJUSTMENT'])
+  type: 'IN' | 'OUT' | 'ADJUSTMENT';
 
   @IsString()
-  @IsNotEmpty()
   reason: string;
 }

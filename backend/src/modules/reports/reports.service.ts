@@ -111,9 +111,15 @@ export class ReportsService {
 
     // Calculate inventory value (sum of costPrice * currentStock)
     const products = await this.prisma.product.findMany({
-      where: { organizationId },
-      select: { costPrice: true, currentStock: true, createdAt: true },
-    });
+  where: { organizationId },
+  select: {
+    costPrice: true,
+    currentStock: true,
+    minimumStock: true,
+    createdAt: true,
+  },
+});
+
 
     // Current month inventory value (using current stock values)
     const thisMonthInventory = products.reduce((sum, p) => sum + (p.costPrice * (p.currentStock || 0)), 0);

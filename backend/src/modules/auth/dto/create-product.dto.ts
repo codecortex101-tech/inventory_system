@@ -17,6 +17,9 @@ export class CreateProductDto {
   @IsUUID()
   categoryId: string;
 
+  @IsUUID()
+  organizationId: string;
+
   @IsOptional()
   @IsString()
   description?: string;

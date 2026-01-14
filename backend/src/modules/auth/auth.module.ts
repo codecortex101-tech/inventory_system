@@ -14,7 +14,7 @@ import { AuditLogModule } from '../audit-log/audit-log.module';
   imports: [
     UsersModule,
     AuditLogModule,
-    PassportModule,
+    PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({

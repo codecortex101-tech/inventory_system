@@ -22,13 +22,22 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
+  // ✅ ADMIN ONLY
   @Post()
-  @UseGuards(RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
-  create(@Body() createProductDto: CreateProductDto, @CurrentUser() user: any) {
-    return this.productsService.create(createProductDto, user.organizationId, user.id);
+  create(
+    @Body() createProductDto: CreateProductDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.productsService.create(
+      createProductDto,
+      user.organizationId,
+      user.id,
+    );
   }
 
+  // ✅ ADMIN + STAFF
   @Get()
   findAll(
     @Query('page') page?: string,
@@ -76,15 +85,26 @@ export class ProductsController {
     return this.productsService.findOne(id, user.organizationId);
   }
 
+  // ✅ ADMIN + STAFF
   @Patch(':id')
-  @UseGuards(RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'STAFF')
-  update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto, @CurrentUser() user: any) {
-    return this.productsService.update(id, updateProductDto, user.organizationId, user.id);
+  update(
+    @Param('id') id: string,
+    @Body() updateProductDto: UpdateProductDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.productsService.update(
+      id,
+      updateProductDto,
+      user.organizationId,
+      user.id,
+    );
   }
 
+  // ✅ ADMIN ONLY
   @Delete(':id')
-  @UseGuards(RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
   remove(@Param('id') id: string, @CurrentUser() user: any) {
     return this.productsService.remove(id, user.organizationId, user.id);

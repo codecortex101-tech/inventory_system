@@ -1,200 +1,142 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
-enum UserRole {
-  ADMIN
-  STAFF
-}
-
-enum StockMovementType {
-  IN
-  OUT
-  ADJUSTMENT
-}
-
-enum ProductStatus {
-  ACTIVE
-  INACTIVE
-}
-
-enum OrderStatus {
-  PENDING
-  PROCESSING
-  SHIPPED
-  DELIVERED
-  BACKORDERED
-  CANCELLED
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 model Organization {
   id        String   @id @default(uuid())
   name      String
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  users         User[]
-  categories    Category[]
-  products      Product[]
+  users          User[]
+  categories     Category[]
+  products       Product[]
   stockMovements StockMovement[]
-  auditLogs     AuditLog[]
-  orders        Order[]
+  auditLogs      AuditLog[]
+  orders         Order[]
   purchaseOrders PurchaseOrder[]
-
-  @@map("organizations")
 }
 
 model User {
-  id             String       @id @default(uuid())
+  id             String   @id @default(uuid())
   name           String
-  email          String
+  email          String   @unique
   password       String
-  role           UserRole     @default(STAFF)
-  organizationId String       @map("organization_id")
-  createdAt      DateTime     @default(now()) @map("created_at")
-  updatedAt      DateTime     @updatedAt @map("updated_at")
+  role           String   @default("STAFF")
+  organizationId String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id])
   stockMovements StockMovement[]
   auditLogs      AuditLog[]
-
-  @@unique([email, organizationId])
-  @@map("users")
 }
 
 model Category {
-  id             String        @id @default(uuid())
+  id             String   @id @default(uuid())
   name           String
   description    String?
-  organizationId String        @map("organization_id")
-  createdAt      DateTime      @default(now()) @map("created_at")
-  updatedAt      DateTime      @updatedAt @map("updated_at")
+  organizationId String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  products       Product[]
+  organization Organization @relation(fields: [organizationId], references: [id])
+  products     Product[]
 
   @@unique([name, organizationId])
-  @@map("categories")
 }
 
 model Product {
-  id             String        @id @default(uuid())
+  id             String   @id @default(uuid())
   name           String
   sku            String
-  categoryId     String        @map("category_id")
-  organizationId String        @map("organization_id")
+  categoryId     String
+  organizationId String
   description    String?
-  imageUrl       String?       @map("image_url")
-  costPrice      Float         @map("cost_price")
-  sellingPrice   Float         @map("selling_price")
-  currentStock   Int           @default(0) @map("current_stock")
-  minimumStock   Int           @default(0) @map("minimum_stock")
-  unit           String        @default("pcs")
-  status         ProductStatus @default(ACTIVE)
-  expirationDate DateTime?     @map("expiration_date")
-  createdAt      DateTime      @default(now()) @map("created_at")
-  updatedAt      DateTime      @updatedAt @map("updated_at")
+  imageUrl       String?
+  costPrice      Float
+  sellingPrice   Float
+  currentStock   Int      @default(0)
+  minimumStock   Int      @default(0)
+  unit           String   @default("pcs")
+  status         String   @default("ACTIVE")
+  expirationDate DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  category       Category      @relation(fields: [categoryId], references: [id])
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  category       Category     @relation(fields: [categoryId], references: [id])
   stockMovements StockMovement[]
 
   @@unique([sku, organizationId])
-  @@map("products")
 }
 
 model StockMovement {
-  id             String            @id @default(uuid())
-  productId      String            @map("product_id")
-  organizationId String            @map("organization_id")
+  id             String   @id @default(uuid())
+  productId      String
+  organizationId String
   quantity       Int
-  type           StockMovementType
+  type           String
   reason         String
-  userId         String            @map("user_id")
-  createdAt      DateTime          @default(now()) @map("created_at")
+  userId         String
+  createdAt      DateTime @default(now())
 
-  organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  product        Product           @relation(fields: [productId], references: [id], onDelete: Cascade)
-  user           User              @relation(fields: [userId], references: [id])
-
-  @@map("stock_movements")
-}
-
-enum AuditLogAction {
-  CREATE
-  UPDATE
-  DELETE
-  LOGIN
-  LOGOUT
-  STOCK_MOVEMENT
-  STATUS_CHANGE
+  organization Organization @relation(fields: [organizationId], references: [id])
+  product      Product      @relation(fields: [productId], references: [id])
+  user         User         @relation(fields: [userId], references: [id])
 }
 
 model AuditLog {
-  id             String          @id @default(uuid())
-  organizationId String          @map("organization_id")
-  userId         String          @map("user_id")
-  action         AuditLogAction
-  entityType     String          @map("entity_type")
-  entityId       String?         @map("entity_id")
+  id             String   @id @default(uuid())
+  organizationId String
+  userId         String
+  action         String
+  entityType     String
+  entityId       String?
   description    String
-  oldValue       String?         @map("old_value")
-  newValue       String?         @map("new_value")
-  ipAddress      String?         @map("ip_address")
-  userAgent      String?         @map("user_agent")
-  createdAt      DateTime        @default(now()) @map("created_at")
+  oldValue       String?
+  newValue       String?
+  ipAddress      String?
+  userAgent      String?
+  createdAt      DateTime @default(now())
 
-  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  user           User            @relation(fields: [userId], references: [id])
-
-  @@map("audit_logs")
-  @@index([organizationId, createdAt])
-  @@index([userId, createdAt])
+  organization Organization @relation(fields: [organizationId], references: [id])
+  user         User         @relation(fields: [userId], references: [id])
 }
 
 model Order {
-  id             String      @id @default(uuid())
-  organizationId String      @map("organization_id")
-  customerName   String      @map("customer_name")
-  status         OrderStatus @default(PENDING)
-  orderDate      DateTime    @default(now()) @map("order_date")
-  shippedDate    DateTime?   @map("shipped_date")
-  dueDate        DateTime?   @map("due_date")
-  totalAmount    Float       @default(0) @map("total_amount")
-  createdAt      DateTime    @default(now()) @map("created_at")
-  updatedAt      DateTime    @updatedAt @map("updated_at")
+  id             String   @id @default(uuid())
+  organizationId String
+  customerName   String
+  status         String   @default("PENDING")
+  orderDate      DateTime @default(now())
+  shippedDate    DateTime?
+  dueDate        DateTime?
+  totalAmount    Float    @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-
-  @@map("orders")
-  @@index([organizationId, status])
-  @@index([organizationId, orderDate])
+  organization Organization @relation(fields: [organizationId], references: [id])
 }
 
 model PurchaseOrder {
   id             String   @id @default(uuid())
-  organizationId String   @map("organization_id")
-  vendorName     String   @map("vendor_name")
-  poNumber       String   @unique @map("po_number")
+  organizationId String
+  vendorName     String
+  poNumber       String   @unique
   status         String   @default("OPEN")
-  orderDate      DateTime @default(now()) @map("order_date")
-  expectedDate   DateTime? @map("expected_date")
-  receivedDate   DateTime? @map("received_date")
-  totalAmount    Float    @default(0) @map("total_amount")
-  isLate         Boolean  @default(false) @map("is_late")
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  orderDate      DateTime @default(now())
+  expectedDate   DateTime?
+  receivedDate   DateTime?
+  totalAmount    Float    @default(0)
+  isLate         Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-
-  @@map("purchase_orders")
-  @@index([organizationId, status])
+  organization Organization @relation(fields: [organizationId], references: [id])
 }

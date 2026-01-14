@@ -144,7 +144,7 @@ async function main() {
       currentStock: 15,
       minimumStock: 10,
       unit: 'pcs',
-      status: 'ACTIVE' as const,
+      status: 'ACTIVE',
     },
     {
       name: 'Wireless Mouse',
