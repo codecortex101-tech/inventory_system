@@ -78,22 +78,22 @@ export const History = () => {
     if (filters.timeRange) {
       const now = new Date();
       let startDate = '';
-      let endDate = now.toISOString().split('T')[0];
+      const endDate = now.toISOString().split('T')[0];
 
       switch (filters.timeRange) {
         case 'today':
           startDate = now.toISOString().split('T')[0];
           break;
         case 'week':
-          const weekAgo = new Date(now);
+          { const weekAgo = new Date(now);
           weekAgo.setDate(weekAgo.getDate() - 7);
           startDate = weekAgo.toISOString().split('T')[0];
-          break;
+          break; }
         case 'month':
-          const monthAgo = new Date(now);
+          { const monthAgo = new Date(now);
           monthAgo.setMonth(monthAgo.getMonth() - 1);
           startDate = monthAgo.toISOString().split('T')[0];
-          break;
+          break; }
         case 'last7':
           const last7 = new Date(now);
           last7.setDate(last7.getDate() - 7);
