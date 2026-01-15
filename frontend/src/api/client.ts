@@ -1,14 +1,23 @@
 import axios, { AxiosError } from 'axios';
 
 /**
- * IMPORTANT:
- * Vercel ENV = VITE_API_BASE_URL
- * Render backend = https://inventory-backend-updated.onrender.com/api
+ * IMPORTANT (DO NOT CHANGE):
+ * Vercel ENV NAME  : VITE_API_BASE_URL
+ * Example value   : https://inventory-backend-updated.onrender.com/api
  */
-const API_URL =
-  import.meta.env.VITE_API_BASE_URL ||
-  'http://localhost:4000/api';
 
+// 🚨 HARD REQUIRE — NO FALLBACKS ALLOWED
+const API_URL = import.meta.env.VITE_API_BASE_URL;
+
+if (!API_URL) {
+  throw new Error(
+    '❌ VITE_API_BASE_URL is NOT defined. Check Vercel Environment Variables.'
+  );
+}
+
+console.log('✅ API BASE URL (BUILD TIME):', API_URL);
+
+// Axios instance
 export const apiClient = axios.create({
   baseURL: API_URL,
   headers: {
@@ -17,11 +26,14 @@ export const apiClient = axios.create({
   timeout: 30000,
 });
 
-// Attach JWT token
+// =======================
+// REQUEST INTERCEPTOR
+// =======================
 apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
-    if (token && config.headers) {
+    if (token) {
+      config.headers = config.headers || {};
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
@@ -29,24 +41,28 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Global response handling
+// =======================
+// RESPONSE INTERCEPTOR
+// =======================
 apiClient.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
-    // 🔴 Backend unreachable
+    // 🔴 BACKEND UNREACHABLE (CORS / NETWORK / DNS)
     if (!error.response) {
-      const apiUrl =
-        import.meta.env.VITE_API_BASE_URL ||
-        'http://localhost:4000/api';
-
       return Promise.reject({
-        message: `Cannot connect to backend server. Please make sure backend is running on ${apiUrl.replace('/api', '')}`,
+        message: `Cannot connect to backend server. Backend URL: ${API_URL.replace(
+          '/api',
+          ''
+        )}`,
         isNetworkError: true,
+        originalError: error,
       });
     }
 
     const status = error.response.status;
+    const data: any = error.response.data;
 
+    // 🔐 UNAUTHORIZED
     if (status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
@@ -58,32 +74,35 @@ apiClient.interceptors.response.use(
 
       return Promise.reject({
         message: 'Session expired. Please login again.',
-        status: 401,
+        status,
       });
     }
 
+    // ⛔ FORBIDDEN
     if (status === 403) {
       return Promise.reject({
         message: 'You do not have permission to perform this action.',
-        status: 403,
+        status,
       });
     }
 
+    // ❓ NOT FOUND
     if (status === 404) {
       return Promise.reject({
         message: 'Resource not found.',
-        status: 404,
+        status,
       });
     }
 
+    // ⚠️ CONFLICT
     if (status === 409) {
-      const data: any = error.response.data;
       return Promise.reject({
         message: data?.message || 'Conflict error.',
-        status: 409,
+        status,
       });
     }
 
+    // 💥 SERVER ERROR
     if (status >= 500) {
       return Promise.reject({
         message: 'Server error. Please try again later.',
@@ -91,16 +110,16 @@ apiClient.interceptors.response.use(
       });
     }
 
+    // ❌ VALIDATION ERROR
     if (status === 400) {
-      const data: any = error.response.data;
       return Promise.reject({
         message: data?.message || 'Invalid request.',
-        status: 400,
+        status,
         errors: data?.errors || null,
       });
     }
 
-    const data: any = error.response.data;
+    // 🔚 DEFAULT
     return Promise.reject({
       message: data?.message || error.message || 'An error occurred',
       status,
