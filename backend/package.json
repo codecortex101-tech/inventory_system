@@ -7,7 +7,7 @@
   "license": "MIT",
 
   "scripts": {
-    "build": "npx @nestjs/cli nest build",
+    "build": "npx @nestjs/cli build",
     "start": "node dist/src/main.js",
     "start:prod": "node dist/src/main.js",
     "dev": "nest start --watch",
